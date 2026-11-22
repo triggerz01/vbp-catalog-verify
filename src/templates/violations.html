@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block t %}违规名单{% endblock %}
+{% block body %}
+<div class="crumb"><a href="{{ url_for('index') }}">工作台</a> / 数据查询 / 违规名单</div>
+<h1>违规 / 取消资格名单</h1>
+<p class="muted">真实公告数据 · 与中选记录通过「企业名+药品名」弱关联，用于交叉核验</p>
+<table>
+  <tr><th>企业</th><th>药品</th><th>类型</th><th>决定日期</th><th>处理措施</th><th>来源公告</th></tr>
+  {% for v in rows %}
+  <tr><td>{{ v.manufacturer }}</td><td>{{ v.product_name }}</td>
+      <td><span class="tag bad">{{ v.viol_type }}</span></td><td>{{ v.decision_date }}</td>
+      <td>{{ v.action }}</td>
+      <td><a class="link" href="{{ v.src_url }}" target="_blank">{{ v.src_title }}</a></td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

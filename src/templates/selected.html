@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% block t %}中选记录{% endblock %}
+{% block body %}
+<div class="crumb"><a href="{{ url_for('index') }}">工作台</a> / 数据查询 / 中选记录</div>
+<h1>中选 / 备供记录检索</h1>
+<p class="page-sub">按药品名、企业、备注、供应省份、价格区间组合检索；点药品名进入详情页，查看供应省份、同品种价格对比、目录匹配与违规命中。</p>
+<form class="search" method="get">
+  <input name="q" value="{{ request.args.get('q','') }}" placeholder="药品名">
+  <input name="mfr" value="{{ request.args.get('mfr','') }}" placeholder="企业名">
+  <select name="remark">
+    <option value="">全部备注</option>
+    {% for r in ['中选药品','备供药品','视同主供的中选药品'] %}
+    <option value="{{r}}" {{ 'selected' if request.args.get('remark')==r }}>{{r}}</option>{% endfor %}
+  </select>
+  <select name="province"><option value="">供应省份</option>
+    {% for p in provinces %}<option value="{{p.province}}" {{ 'selected' if request.args.get('province')==p.province }}>{{p.province}}</option>{% endfor %}
+  </select>
+  <input name="pmin" value="{{ request.args.get('pmin','') }}" placeholder="价格≥" size="6">
+  <input name="pmax" value="{{ request.args.get('pmax','') }}" placeholder="价格≤" size="6">
+  <button class="btn sm">检索</button>
+</form>
+<p class="muted">共 {{ rows|length }} 条（最多显示 300）</p>
+<table>
+  <tr><th>序号</th><th>药品名称</th><th>剂型</th><th>规格</th><th>企业</th><th>中选价</th><th>备注</th><th>状态</th><th></th></tr>
+  {% for s in rows %}
+  <tr>
+    <td>{{ s.seq_no }}</td>
+    <td><a class="link" href="{{ url_for('selected_detail',sid=s.selected_id) }}">{{ s.product_name }}</a></td>
+    <td>{{ s.dosage_form }}</td><td class="muted">{{ s.specification }}</td>
+    <td>{{ s.mfr_name }}</td><td>{{ s.price }}</td><td>{{ s.remark }}</td>
+    <td><span class="tag {{ 'bad' if s.status=='失效' else 'okk' }}">{{ s.status }}</span></td>
+    <td><a class="link" href="{{ url_for('selected_detail',sid=s.selected_id) }}">详情</a></td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

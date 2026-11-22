@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% block t %}医保目录{% endblock %}
+{% block body %}
+<div class="crumb"><a href="{{ url_for('index') }}">工作台</a> / 数据查询 / 医保目录</div>
+<h1>国家医保药品目录（2023 版 · 集采品种子集）</h1>
+<p class="page-sub">按通用名或甲/乙类检索。甲类全额报销、乙类先行自付；备注列为限制支付条件。</p>
+<form class="search" method="get">
+  <input name="q" value="{{ request.args.get('q','') }}" placeholder="通用名">
+  <select name="category"><option value="">甲/乙类</option>
+    <option value="甲" {{ 'selected' if request.args.get('category')=='甲' }}>甲类</option>
+    <option value="乙" {{ 'selected' if request.args.get('category')=='乙' }}>乙类</option>
+  </select>
+  <button class="btn sm">检索</button>
+</form>
+<p class="muted">共 {{ rows|length }} 条 · 真实数据（国家医保局 2023 版目录）</p>
+<table>
+  <tr><th>编号</th><th>通用名</th><th>剂型</th><th>甲/乙</th><th>板块</th><th>备注 / 限制</th></tr>
+  {% for c in rows %}
+  <tr><td>{{ c.catalog_no }}</td><td>{{ c.product_name }}</td><td>{{ c.dosage_form }}</td>
+      <td><span class="tag {{ 'okk' if c.category=='甲' else '' }}">{{ c.category }}</span></td>
+      <td>{{ c.section }}</td><td class="muted">{{ c.note }}</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

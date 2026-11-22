@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% block t %}企业详情{% endblock %}
+{% block body %}
+<h1>{{ m.name }}</h1>
+<div class="panel"><dl class="kv">
+  <dt>类型</dt><dd>{{ m.type }}</dd>
+  <dt>统一社会信用代码</dt><dd>{{ m.uscc or '（待补录）' }}</dd>
+  <dt>中选/备供记录</dt><dd>{{ items|length }} 条</dd>
+</dl></div>
+{% if viols %}
+<div class="warnbox"><b>⚠ 违规记录：</b>
+  {% for v in viols %}<div>{{ v.product_name }} · {{ v.viol_type }} · {{ v.decision_date }} · {{ v.action }}</div>{% endfor %}
+</div>
+{% endif %}
+<h2>中选 / 备供记录</h2>
+<table>
+  <tr><th>批次</th><th>序号</th><th>药品</th><th>规格</th><th>价格</th><th>备注</th><th>状态</th><th></th></tr>
+  {% for s in items %}
+  <tr><td>{{ s.batch_no }}</td><td>{{ s.seq_no }}</td>
+      <td><a class="link" href="{{ url_for('selected_detail',sid=s.selected_id) }}">{{ s.product_name }}</a></td>
+      <td class="muted">{{ s.specification }}</td><td>{{ s.price }}</td><td>{{ s.remark }}</td>
+      <td><span class="tag {{ 'bad' if s.status=='失效' else 'okk' }}">{{ s.status }}</span></td>
+      <td><a class="link" href="{{ url_for('selected_detail',sid=s.selected_id) }}">详情</a></td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% block t %}企业{% endblock %}
+{% block body %}
+<div class="crumb"><a href="{{ url_for('index') }}">工作台</a> / 数据查询 / 企业</div>
+<h1>生产企业</h1>
+<p class="page-sub">按中选记录数排序，含平均中选价；点「详情」查看该企业的全部中选记录与违规记录。</p>
+<p class="muted">共 {{ rows|length }} 家 · 按中选记录数排序（LEFT JOIN + GROUP BY）</p>
+<table>
+  <tr><th>企业名称</th><th>类型</th><th>中选/备供记录数</th><th>平均中选价</th><th>数据</th><th></th></tr>
+  {% for m in rows %}
+  <tr>
+    <td>{{ m.name }}</td><td>{{ m.type }}</td><td>{{ m.n }}</td>
+    <td>{{ m.avg_p or '—' }}</td>
+    <td><span class="tag {{ 'real' if m.data_kind=='真实' else 'mock' }}">{{ m.data_kind }}</span></td>
+    <td><a class="link" href="{{ url_for('manufacturer_detail',mid=m.manufacturer_id) }}">详情</a></td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}{% block t %}核验中心{% endblock %}
+{% block body %}
+<div class="crumb"><a href="{{ url_for('index') }}">工作台</a> / 交叉核验 / 核验中心</div>
+<h1>交叉核验中心</h1>
+<p class="muted">本选题核心：把三个来源放在一起核对一致性与矛盾。以下结果全部由 SQL 实时算出。</p>
+
+<h2>① 违规核验：已取消资格 / 断供，但中选记录仍「有效」 <span class="tag bad">{{ conflict|length }}</span></h2>
+<p class="muted">视图 v_violation_conflict：violation 与 selected_item 按「企业名+药品名」弱关联</p>
+<table>
+  <tr><th>企业</th><th>药品</th><th>类型</th><th>决定日期</th><th>批次</th><th>序号</th><th>中选价</th><th>当前状态</th><th></th></tr>
+  {% for c in conflict %}
+  <tr><td>{{ c.manufacturer }}</td><td>{{ c.product_name }}</td><td>{{ c.viol_type }}</td>
+      <td>{{ c.decision_date }}</td><td>{{ c.batch_no }}</td><td>{{ c.seq_no }}</td><td>{{ c.price }}</td>
+      <td><span class="tag bad">{{ c.selected_status }}</span></td>
+      <td><a class="link" href="{{ url_for('selected_detail',sid=c.selected_id) }}">处理</a></td></tr>
+  {% else %}<tr><td colspan="9" class="muted">无矛盾（全部一致）</td></tr>{% endfor %}
+</table>
+
+<h2>② 目录内品种但批文库无有效批文 <span class="tag bad">{{ no_approval|length }}</span></h2>
+<p class="muted">视图 v_catalog_no_approval：catalog_entry 左外连接 drug（在产）找空，按归一化核心名匹配</p>
+<table>
+  <tr><th>目录编号</th><th>通用名</th><th>甲/乙</th><th>板块</th></tr>
+  {% for c in no_approval %}
+  <tr><td>{{ c.catalog_no }}</td><td>{{ c.product_name }}</td><td>{{ c.category }}</td><td>{{ c.section }}</td></tr>
+  {% else %}<tr><td colspan="4" class="muted">全部目录条目均有有效批文</td></tr>{% endfor %}
+</table>
+
+<h2>③ 集采品种未入医保目录 <span class="tag bad">{{ not_in_catalog|length }}</span></h2>
+<p class="muted">drug 按核心名在 catalog_entry 找空——「集采中选但未纳入医保」的品种</p>
+<table>
+  <tr><th>通用名</th><th>核心名</th><th>说明</th></tr>
+  {% for d in not_in_catalog %}
+  <tr><td>{{ d.generic_name }}</td><td>{{ d.core_name }}</td>
+      <td class="muted">集采中选但 2023 版医保目录未收录（真实核验点）</td></tr>
+  {% else %}<tr><td colspan="3" class="muted">全部集采品种均已入目录</td></tr>{% endfor %}
+</table>
+
+<h2>④ 同品种跨企业中选价差异 <span class="tag">{{ price_gap|length }}</span></h2>
+<p class="muted">GROUP BY product_name，MAX-MIN 价差 &gt; 1 元——主供/备供/不同企业价格对照</p>
+<table>
+  <tr><th>药品</th><th>记录数</th><th>最低价</th><th>最高价</th><th>价差</th></tr>
+  {% for p in price_gap %}
+  <tr><td>{{ p.product_name }}</td><td>{{ p.n }}</td><td>{{ p.pmin }}</td><td>{{ p.pmax }}</td>
+      <td><b>{{ p.gap }}</b></td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

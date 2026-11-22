@@ -1,0 +1,19 @@
+{% extends "base.html" %}{% block t %}登录{% endblock %}
+{% block body %}
+<h1>登录</h1>
+<div class="panel" style="max-width:420px">
+  <form method="post">
+    <p>账号：<input name="username" required placeholder="如 admin"></p>
+    <p>口令：<input type="password" name="password" required placeholder="meddemo"></p>
+    <button class="btn">登录</button>
+  </form>
+  <p class="muted">演示口令统一为 <b>meddemo</b>。点击下列账号自动填入账号：</p>
+  <table>
+    <tr><th>账号</th><th>姓名</th><th>角色</th></tr>
+    {% for a in accounts %}
+    <tr><td><a class="link" onclick="document.querySelector('[name=username]').value='{{a.username}}'">{{ a.username }}</a></td>
+        <td>{{ a.display_name }}</td><td>{{ ROLES[a.role] }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

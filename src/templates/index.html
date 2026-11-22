@@ -1,0 +1,31 @@
+{% extends "base.html" %}{% block t %}首页{% endblock %}
+{% block body %}
+
+<div class="hero">
+  <h1>药品集采 · 医保目录 · 批文 · 违规，放在一起核对</h1>
+  <p>把国家联采办公告、国家医保目录、药品批文、违规名单四个官方来源，围绕同一批药品统一组织，核对价格、供应、资格与官方记录之间的一致性，每条记录都能回溯到原始公告。</p>
+  <form class="hero-search" method="get" action="{{ url_for('selected') }}">
+    <input name="q" placeholder="输入药品通用名，如 吡拉西坦 / 阿立哌唑 / 来那度胺" autofocus>
+    <button class="btn" type="submit">查询中选与价格</button>
+  </form>
+  <p class="hero-links">也可以查 <a href="{{ url_for('catalog') }}">医保目录（甲/乙类）</a> · <a href="{{ url_for('manufacturers') }}">生产企业</a> · <a href="{{ url_for('violations') }}">违规名单</a> · <a href="{{ url_for('announcements') }}">公告来源</a></p>
+</div>
+
+<div class="cards">
+  <div class="stat"><div class="n">{{ stats.selected }}</div><div class="l">中选 / 备供记录</div></div>
+  <div class="stat"><div class="n">{{ stats.mfr }}</div><div class="l">生产企业</div></div>
+  <div class="stat"><div class="n">{{ stats.catalog }}</div><div class="l">医保目录条目</div></div>
+  <div class="stat"><div class="n">{{ stats.violation }}</div><div class="l">违规公告</div></div>
+</div>
+
+<div class="panel">
+  <h2>数据来源与真实性</h2>
+  <p>本系统为数据库课程大作业演示。集采清单、医保目录、违规公告均来自国家联采办 / 国家医保局公开公告，属<strong>真实数据</strong>；药品批准文号、供应省份、用户账号为课程演示用<strong>模拟数据</strong>，在数据库中以 <code>data_kind</code> 字段区分。</p>
+  <p>每条记录都可回溯到原始公告：在中选记录详情页点「来源公告」即可查看官方原文 PDF 或网页，用于核对与取证。</p>
+</div>
+
+<div class="panel">
+  <h2>登录后能用更多</h2>
+  <p>登录后进入与你的角色对应的工作台：医院采购核对供应与违规、药企合规核对批文与价格、研究员做跨源核验与统计、管理员维护数据并处置核验矛盾。点右上角「登录」。</p>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}{% block t %}数据管理工作台{% endblock %}
+{% block body %}
+<div class="ws-head">
+  <h1>数据管理工作台</h1>
+  <p class="page-sub">身份：{{ u.display_name }} · 管理员　｜　任务：维护数据、处置核验矛盾、监控数据质量。本页为管理区；公共查询请用上方导航。</p>
+</div>
+
+<div class="panel">
+  <h2>主操作 · 数据管理</h2>
+  <p>
+    <a class="btn sm" href="{{ url_for('admin_selected_new') }}">+ 新增中选记录</a>
+    <a class="btn ghost sm" href="{{ url_for('selected') }}">检索并编辑 / 删除</a>
+    <a class="btn ghost sm" href="{{ url_for('verify') }}">查看核验中心</a>
+  </p>
+  <p class="muted">写操作均在事务中执行，受 CHECK（价格&gt;0）/ UNIQUE / 外键约束保护；标记失效会联动核验视图。</p>
+</div>
+
+<div class="warnbox">
+  <h2>⚠ 待处置冲突（真实风险）：已取消资格 / 断供但清单仍「有效」</h2>
+  <table>
+    <thead><tr><th>企业</th><th>药品</th><th>违规类型</th><th>批次</th><th>序号</th><th>中选价</th><th>状态</th><th>处置</th></tr></thead>
+    <tbody>
+    {% for c in conflicts %}
+      <tr><td>{{ c.manufacturer }}</td><td>{{ c.product_name }}</td><td>{{ c.viol_type }}</td>
+          <td>{{ c.batch_no }}</td><td>{{ c.seq_no }}</td><td class="num">{{ c.price }}</td>
+          <td><span class="tag bad">{{ c.selected_status }}</span></td>
+          <td>
+            <a class="link" href="{{ url_for('selected_detail',sid=c.selected_id) }}">详情</a>
+            <form method="post" action="{{ url_for('admin_selected_invalidate',sid=c.selected_id) }}" style="display:inline"
+                  onsubmit="return confirm('将 {{ c.product_name }}（第{{ c.seq_no }}条）标记为失效？核验矛盾随之消除。')">
+              <button class="btn red sm">标记失效</button>
+            </form>
+          </td></tr>
+    {% else %}<tr><td colspan="8"><span class="tag okk">已全部处置，无待处置冲突。</span></td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="panel">
+  <h2>数据质量</h2>
+  <ul class="clean">
+    <li>集采中选但未入医保目录的品种（{{ not_in_catalog|length }} 个，需确认是否属预期）：
+      {% for d in not_in_catalog %}<span class="tag mock">{{ d.generic_name }}</span> {% endfor %}</li>
+    <li>目录内但无有效批文的品种：{{ stats.no_approval }} 个（见核验中心板块②）。</li>
+    <li>中选记录真实性：{% for d in mock_stat %}{{ d.data_kind }} {{ d.n }} 条{{ '；' if not loop.last }}{% endfor %}。</li>
+    <li>待复核项：供应省份为模拟数据；批文号为占位，待接入真实批文库。</li>
+  </ul>
+</div>
+
+<h2>数据规模指标</h2>
+<div class="cards">
+  <div class="stat"><div class="n">{{ stats.selected }}</div><div class="l">中选 / 备供记录</div></div>
+  <div class="stat"><div class="n">{{ stats.mfr }}</div><div class="l">企业</div></div>
+  <div class="stat"><div class="n">{{ stats.catalog }}</div><div class="l">目录条目</div></div>
+  <div class="stat warn"><div class="n">{{ stats.conflict }}</div><div class="l">待处置冲突</div></div>
+  <div class="stat"><div class="n">{{ stats.violation }}</div><div class="l">违规公告</div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}{% block t %}统计{% endblock %}
+{% block body %}
+<div class="crumb"><a href="{{ url_for('index') }}">工作台</a> / 统计分析</div>
+<h1>统计与分析</h1>
+<p class="muted">每个板块一条真实 SQL（多表 JOIN / GROUP BY / HAVING / 聚合）</p>
+
+<h2>中选 / 备供 / 视同主供 分布</h2>
+<table><tr><th>备注</th><th>记录数</th><th>平均价</th></tr>
+  {% for r in by_remark %}<tr><td>{{ r.remark }}</td><td>{{ r.n }}</td><td>{{ r.avg_p }}</td></tr>{% endfor %}
+</table>
+
+<h2>企业中选记录数与价格（≥2 条）</h2>
+<table><tr><th>企业</th><th>记录数</th><th>平均价</th><th>最低</th><th>最高</th></tr>
+  {% for r in by_mfr %}<tr><td>{{ r.name }}</td><td>{{ r.n }}</td><td>{{ r.avg_p }}</td><td>{{ r.mn }}</td><td>{{ r.mx }}</td></tr>{% endfor %}
+</table>
+
+<h2>医保目录甲乙类分布</h2>
+<table><tr><th>类别</th><th>条目数</th></tr>
+  {% for r in by_cat %}<tr><td>{{ r.category }}</td><td>{{ r.n }}</td></tr>{% endfor %}
+</table>
+
+<h2>各省供应记录数（TOP15，模拟数据）</h2>
+<table><tr><th>省份</th><th>供应记录数</th></tr>
+  {% for r in by_prov %}<tr><td>{{ r.province }}</td><td>{{ r.n }}</td></tr>{% endfor %}
+</table>
+
+<h2>中选价 TOP10</h2>
+<table><tr><th>药品</th><th>企业</th><th>价格</th><th>备注</th></tr>
+  {% for r in top_price %}<tr><td>{{ r.product_name }}</td><td>{{ r.mfr }}</td><td>{{ r.price }}</td><td>{{ r.remark }}</td></tr>{% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,38 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block t %}工作台{% endblock %} · 药品集采与医保目录交叉核验</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}"></head>
+<body>
+<div class="topbar"><div class="topbar-in">
+  <a class="brand" href="{{ url_for('workspace') if me else url_for('index') }}">
+    <span class="logo">药</span>
+    <span>药品集采核验<small>集采 × 医保目录 × 批文 × 违规</small></span>
+  </a>
+  <nav class="mainnav">
+    {% if me %}<a href="{{ url_for('workspace') }}" class="{{ 'active' if request.endpoint=='workspace' }}">我的工作台</a>{% endif %}
+    <a href="{{ url_for('selected') }}" class="{{ 'active' if request.endpoint=='selected' }}">中选记录</a>
+    <a href="{{ url_for('catalog') }}" class="{{ 'active' if request.endpoint=='catalog' }}">医保目录</a>
+    <a href="{{ url_for('manufacturers') }}" class="{{ 'active' if request.endpoint=='manufacturers' }}">企业</a>
+    <a href="{{ url_for('violations') }}" class="{{ 'active' if request.endpoint=='violations' }}">违规名单</a>
+    {% if me %}
+      <a href="{{ url_for('verify') }}" class="{{ 'active' if request.endpoint=='verify' }}">核验中心</a>
+      <a href="{{ url_for('stats') }}" class="{{ 'active' if request.endpoint=='stats' }}">统计分析</a>
+    {% endif %}
+    <a href="{{ url_for('announcements') }}" class="{{ 'active' if request.endpoint=='announcements' }}">公告</a>
+  </nav>
+  <div class="topbar-right">
+    {% if me %}
+      <span class="chip-user"><span class="avatar">{{ me.display_name[0] }}</span>{{ me.display_name }} · {{ ROLES[me.role] }}</span>
+      {% if me.role=='admin' %}<a class="btn sm" href="{{ url_for('admin_selected_new') }}">+ 新增中选</a>{% endif %}
+      <a class="btn ghost sm" href="{{ url_for('logout') }}">退出</a>
+    {% else %}
+      <a class="btn sm" href="{{ url_for('login') }}">登 录</a>
+    {% endif %}
+  </div>
+</div></div>
+{% with msgs=get_flashed_messages(with_categories=true) %}
+  {% for c,m in msgs %}<div class="flash {{ c }}">{{ m }}</div>{% endfor %}
+{% endwith %}
+<main>{% block body %}{% endblock %}</main>
+<footer>数据库系统概论课程大作业 · 数据来自国家联采办 / 国家医保局公开公告（真实）与标注的模拟数据 · Flask + SQLite · <a class="link" href="{{ url_for('index') }}">返回工作台</a></footer>
+</body></html>

@@ -1,0 +1,74 @@
+{% extends "base.html" %}{% block t %}药企合规工作台{% endblock %}
+{% block body %}
+<div class="ws-head">
+  <h1>药企合规工作台</h1>
+  <p class="page-sub">身份：{{ u.display_name }} · 药企合规　｜　任务：查询任意企业的中选与违规、核对批文/目录一致性、评估同品种竞争价格。本系统不绑定具体企业，请用「选择企业」查看目标企业。</p>
+</div>
+
+<div class="panel">
+  <h2>主操作 · 选择企业核对</h2>
+  <form class="search" method="get" action="{{ url_for('workspace') }}">
+    <select name="mid">
+      <option value="">— 选择企业 —</option>
+      {% for m in mfrs %}<option value="{{ m.manufacturer_id }}" {{ 'selected' if mid==m.manufacturer_id }}>{{ m.name }}</option>{% endfor %}
+    </select>
+    <button class="btn sm">查看该企业</button>
+    <a class="btn ghost sm" href="{{ url_for('verify') }}">同品种价格对比</a>
+  </form>
+  {% if not mid %}<p class="muted">未绑定企业，请先从下拉框选择要核对的企业（企业数据来自公开集采清单，非任何企业内部数据）。</p>{% endif %}
+</div>
+
+{% if mid and sel_mfr %}
+<div class="panel">
+  <h2>{{ sel_mfr.name }} · 中选 / 备供记录（{{ mfr_items|length }} 条）</h2>
+  <table>
+    <thead><tr><th>批次</th><th>序号</th><th>药品</th><th>规格</th><th>价格</th><th>备注</th><th>状态</th></tr></thead>
+    <tbody>
+    {% for s in mfr_items %}
+      <tr><td>{{ s.batch_no }}</td><td>{{ s.seq_no }}</td>
+          <td><a class="link" href="{{ url_for('selected_detail',sid=s.selected_id) }}">{{ s.product_name }}</a></td>
+          <td class="muted">{{ s.specification }}</td><td class="num">{{ s.price }}</td><td>{{ s.remark }}</td>
+          <td><span class="tag {{ 'bad' if s.status=='失效' else 'okk' }}">{{ s.status }}</span></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<div class="warnbox">
+  <h2>⚠ 合规风险</h2>
+  {% if mid and sel_mfr %}
+    {% if mfr_viols %}
+      {% for v in mfr_viols %}<p>该企业：<strong>{{ v.product_name }}</strong> · {{ v.viol_type }} · {{ v.decision_date }} · {{ v.action }}</p>{% endfor %}
+    {% else %}<p>该企业当前无违规记录。</p>{% endif %}
+  {% endif %}
+  <h2 style="font-size:15px">批文 / 目录一致性（目录内但无有效批文）</h2>
+  <table>
+    <thead><tr><th>目录编号</th><th>通用名</th><th>甲/乙</th><th>板块</th></tr></thead>
+    <tbody>
+    {% for c in no_approval_list %}
+      <tr><td>{{ c.catalog_no }}</td><td>{{ c.product_name }}</td><td>{{ c.category }}</td><td>{{ c.section }}</td></tr>
+    {% else %}<tr><td colspan="4" class="muted">目录内品种均有有效批文。</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2>同品种竞争价格（价差 &gt; 1 元）</h2>
+<table>
+  <thead><tr><th>药品</th><th>记录数</th><th>最低价</th><th>最高价</th><th>价差</th></tr></thead>
+  <tbody>
+  {% for p in price_gap %}
+    <tr><td>{{ p.product_name }}</td><td>{{ p.n }}</td><td class="num">{{ p.pmin }}</td><td class="num">{{ p.pmax }}</td><td class="num"><b>{{ p.gap }}</b></td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% if mid and mfr_stat %}
+<h2>所选企业指标</h2>
+<div class="cards">
+  <div class="stat"><div class="n">{{ mfr_stat.n }}</div><div class="l">中选/备供记录</div></div>
+  <div class="stat"><div class="n">{{ mfr_stat.avg_p or '—' }}</div><div class="l">平均中选价（元）</div></div>
+  <div class="stat warn"><div class="n">{{ mfr_viols|length }}</div><div class="l">违规记录数</div></div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}{% block t %}研究员工作台{% endblock %}
+{% block body %}
+<div class="ws-head">
+  <h1>研究员工作台</h1>
+  <p class="page-sub">身份：{{ u.display_name }} · 研究员　｜　任务：做「中选 vs 执行 vs 违约」的跨源交叉核验，溯源取证，并做统计分析。</p>
+</div>
+
+<div class="panel">
+  <h2>主操作 · 四类交叉核验</h2>
+  <table>
+    <thead><tr><th>核验</th><th>口径（对应 SQL / 视图）</th><th>矛盾数</th><th>入口</th></tr></thead>
+    <tbody>
+      <tr><td>① 违规 vs 中选</td><td class="muted">v_violation_conflict：企业名+药品名弱关联，中选仍有效</td><td><span class="tag {{ 'bad' if stats.conflict else 'okk' }}">{{ stats.conflict }}</span></td><td><a class="link" href="{{ url_for('verify') }}">查看 →</a></td></tr>
+      <tr><td>② 目录 vs 批文</td><td class="muted">v_catalog_no_approval：目录内品种左外连接在产批文找空</td><td><span class="tag {{ 'bad' if stats.no_approval else 'okk' }}">{{ stats.no_approval }}</span></td><td><a class="link" href="{{ url_for('verify') }}">查看 →</a></td></tr>
+      <tr><td>③ 集采 vs 目录</td><td class="muted">drug 核心名在 catalog_entry 找空（集采中选未入医保）</td><td><span class="tag {{ 'bad' if not_in_catalog else 'okk' }}">{{ not_in_catalog|length }}</span></td><td><a class="link" href="{{ url_for('verify') }}">查看 →</a></td></tr>
+      <tr><td>④ 同品种价格差</td><td class="muted">GROUP BY product_name，MAX−MIN &gt; 1 元</td><td><span class="tag">{{ price_gap|length }}</span></td><td><a class="link" href="{{ url_for('verify') }}">查看 →</a></td></tr>
+    </tbody>
+  </table>
+  <p><a class="btn sm" href="{{ url_for('stats') }}">进入统计分析</a> <a class="btn ghost sm" href="{{ url_for('announcements') }}">公告来源追溯</a></p>
+</div>
+
+<div class="warnbox">
+  <h2>⚠ 当前核验发现</h2>
+  <ul class="clean">
+    {% for c in conflicts %}<li>【违规】{{ c.manufacturer }} · {{ c.product_name }}（{{ c.batch_no }} 第 {{ c.seq_no }} 条）取消资格但清单仍有效。</li>{% endfor %}
+    {% for d in not_in_catalog %}<li>【目录】{{ d.generic_name }}：集采中选但 2023 版医保目录未收录。</li>{% endfor %}
+    {% if not conflicts and not not_in_catalog %}<li class="muted">暂无矛盾。</li>{% endif %}
+  </ul>
+</div>
+
+<h2>四源数据规模与真实性</h2>
+<div class="cards">
+  <div class="stat"><div class="n">{{ stats.selected }}</div><div class="l">集采中选/备供记录</div></div>
+  <div class="stat"><div class="n">{{ stats.catalog }}</div><div class="l">医保目录条目</div></div>
+  <div class="stat"><div class="n">{{ stats.violation }}</div><div class="l">违规公告</div></div>
+  <div class="stat"><div class="n">{{ stats.announcement }}</div><div class="l">来源公告</div></div>
+  {% for d in data_kind %}<div class="stat {{ 'warn' if d.data_kind=='模拟' }}"><div class="n">{{ d.n }}</div><div class="l">{{ d.data_kind }}数据（中选记录）</div></div>{% endfor %}
+</div>
+<p class="muted">核验口径与局限：跨源匹配用「去盐基的核心名」互相包含，存在同名异物风险；真实/模拟以 data_kind 标注；关键结论请点来源公告二次核对。</p>
+{% endblock %}

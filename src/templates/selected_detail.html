@@ -1,0 +1,56 @@
+{% extends "base.html" %}{% block t %}中选详情{% endblock %}
+{% block body %}
+<h1>{{ s.product_name }} <span class="tag {{ 'bad' if s.status=='失效' else 'okk' }}">{{ s.status }}</span></h1>
+<div class="panel">
+  <dl class="kv">
+    <dt>批次 / 序号</dt><dd>{{ s.batch_no }} · 第 {{ s.seq_no }} 条</dd>
+    <dt>剂型 / 规格</dt><dd>{{ s.dosage_form }} · {{ s.specification }}</dd>
+    <dt>中选企业</dt><dd>{{ s.manufacturer }}</dd>
+    <dt>中选价</dt><dd><b>{{ s.price }} 元</b>（{{ s.remark }}）</dd>
+    <dt>匹配批文</dt><dd>{{ s.generic_name or '（未匹配）' }} · {{ s.approval_no or '—' }}</dd>
+    <dt>来源公告</dt><dd><a class="link" href="{{ s.source_url }}" target="_blank">{{ s.source_title }}</a></dd>
+  </dl>
+</div>
+
+{% if viols %}
+<div class="warnbox">
+  <b>⚠ 该企业此药品存在违规记录（弱关联命中）：</b>
+  {% for v in viols %}<div>{{ v.viol_type }} · {{ v.decision_date }} · {{ v.action }}</div>{% endfor %}
+  {% if me and me.role=='admin' and s.status=='有效' %}
+  <form method="post" action="{{ url_for('admin_selected_invalidate',sid=s.selected_id) }}" style="margin-top:8px">
+    <button class="btn red sm" onclick="return confirm('确认将该中选记录标记为失效？')">标记失效（消除核验矛盾）</button>
+  </form>
+  {% endif %}
+</div>
+{% endif %}
+
+<h2>供应省份 <span class="tag mock">模拟</span></h2>
+<p>{% for p in provs %}<span class="tag">{{ p.province }}</span> {% endfor %}</p>
+
+<h2>同品种价格对比（价格核验）</h2>
+<table>
+  <tr><th>序号</th><th>企业</th><th>价格</th><th>备注</th></tr>
+  <tr style="background:#EEEDFE"><td>{{ s.seq_no }}</td><td>{{ s.manufacturer }}</td><td><b>{{ s.price }}</b></td><td>{{ s.remark }}（本条）</td></tr>
+  {% for p in peers %}
+  <tr><td><a class="link" href="{{ url_for('selected_detail',sid=p.selected_id) }}">{{ p.seq_no }}</a></td>
+      <td>{{ p.mfr }}</td><td>{{ p.price }}</td><td>{{ p.remark }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>医保目录匹配（按核心名）</h2>
+<table>
+  <tr><th>编号</th><th>通用名</th><th>剂型</th><th>甲/乙</th><th>备注</th></tr>
+  {% for c in cats %}
+  <tr><td>{{ c.catalog_no }}</td><td>{{ c.product_name }}</td><td>{{ c.dosage_form }}</td>
+      <td><span class="tag">{{ c.category }}</span></td><td class="muted">{{ c.note }}</td></tr>
+  {% else %}<tr><td colspan="5" class="muted">未在医保目录匹配到该品种（核验点）</td></tr>{% endfor %}
+</table>
+
+{% if me and me.role=='admin' %}
+<p style="margin-top:16px">
+  <a class="btn sm" href="{{ url_for('admin_selected_edit',sid=s.selected_id) }}">编辑</a>
+  <form method="post" action="{{ url_for('admin_selected_delete',sid=s.selected_id) }}" style="display:inline"
+        onsubmit="return confirm('确认删除该中选记录？')"><button class="btn red sm">删除</button></form>
+</p>
+{% endif %}
+{% endblock %}

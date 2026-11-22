@@ -1,0 +1,44 @@
+{% extends "base.html" %}{% block t %}医院采购工作台{% endblock %}
+{% block body %}
+<div class="ws-head">
+  <h1>医院采购工作台</h1>
+  <p class="page-sub">身份：{{ u.display_name }} · 医院采购　｜　任务：核对品种中选价、供应企业/省份、违规风险与医保类别，辅助采购决策。</p>
+</div>
+
+<div class="panel">
+  <h2>主操作 · 采购核对</h2>
+  <form class="search" method="get" action="{{ url_for('selected') }}">
+    <input name="q" placeholder="药品通用名（如 吡拉西坦）">
+    <select name="province"><option value="">供应省份</option>
+      {% for p in ['山东','江苏','北京','上海','广东','浙江','四川','湖北','河南','辽宁','福建','安徽'] %}<option value="{{p}}">{{p}}</option>{% endfor %}
+    </select>
+    <button class="btn sm">查中选价与供应</button>
+    <a class="btn ghost sm" href="{{ url_for('catalog') }}">查医保甲/乙类</a>
+  </form>
+</div>
+
+<div class="warnbox">
+  <h2>⚠ 违规风险（真实）：已取消资格 / 断供但清单仍「有效」</h2>
+  <table>
+    <thead><tr><th>企业</th><th>药品</th><th>违规类型</th><th>决定日期</th><th>批次</th><th>序号</th><th>中选价</th><th>状态</th><th></th></tr></thead>
+    <tbody>
+    {% for c in conflicts %}
+      <tr><td>{{ c.manufacturer }}</td><td>{{ c.product_name }}</td><td>{{ c.viol_type }}</td>
+          <td>{{ c.decision_date }}</td><td>{{ c.batch_no }}</td><td>{{ c.seq_no }}</td>
+          <td class="num">{{ c.price }}</td><td><span class="tag bad">{{ c.selected_status }}</span></td>
+          <td><a class="link" href="{{ url_for('selected_detail',sid=c.selected_id) }}">查看 →</a></td></tr>
+    {% else %}<tr><td colspan="9" class="muted">暂无违规风险，供应资格一致。</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  <p class="muted">来源：v_violation_conflict（企业名+药品名弱关联）。采购前请避开上述品种或向企业确认最新资格。</p>
+</div>
+
+<h2>采购相关指标</h2>
+<div class="cards">
+  <div class="stat"><div class="n">{{ stats.selected }}</div><div class="l">中选 / 备供记录</div></div>
+  <div class="stat"><div class="n">{{ prov_count }}</div><div class="l">覆盖省份（模拟演示）</div></div>
+  {% for c in cat_ab %}<div class="stat"><div class="n">{{ c.n }}</div><div class="l">医保{{ c.category }}类品种</div></div>{% endfor %}
+  <div class="stat warn"><div class="n">{{ stats.conflict }}</div><div class="l">违规风险品种</div></div>
+</div>
+<p class="muted">口径提示：供应省份为模拟演示数据，正式采购以本省医保局执行公告为准；医保类别来自 2023 版真实目录。</p>
+{% endblock %}
